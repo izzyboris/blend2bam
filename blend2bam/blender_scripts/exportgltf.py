@@ -91,8 +91,7 @@ def export_physics(gltf_data, settings):
         if list([x for x in obj.users_collection if x.name == collection]) and "mesh" in gltf_node:
             del gltf_node["mesh"]
 
-
-def fix_image_uri(gltf_data):
+def fix_image_uri(gltf_data, dstdir):
     bpy.ops.file.make_paths_absolute()
     blender_imgs = {
         (os.path.basename(i.filepath) or i.name).rsplit('.', 1)[0]: i
@@ -108,7 +107,8 @@ def fix_image_uri(gltf_data):
             if filepath:
                 if filepath.startswith('//'):
                     filepath = filepath[2:]
-                img['uri'] = filepath
+                relpath = os.path.relpath(filepath, dstdir)
+                img['uri'] = relpath
 
 
 def add_actions_to_nla():
@@ -233,7 +233,7 @@ def export_gltf(settings, src, dst):
 
     export_physics(gltf_data, settings)
     if settings['textures'] == 'ref':
-        fix_image_uri(gltf_data)
+        fix_image_uri(gltf_data, dstdir)
     if not settings['allow_double_sided_materials']:
         force_single_sided_materials(gltf_data)
     with open(dst, 'w') as gltf_file:
