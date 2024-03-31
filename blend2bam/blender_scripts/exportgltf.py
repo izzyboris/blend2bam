@@ -91,7 +91,8 @@ def export_physics(gltf_data, settings):
         if list([x for x in obj.users_collection if x.name == collection]) and "mesh" in gltf_node:
             del gltf_node["mesh"]
 
-def fix_image_uri(gltf_data, dstdir):
+def fix_image_uri(gltf_data, srcdir):
+
     bpy.ops.file.make_paths_absolute()
     blender_imgs = {
         (os.path.basename(i.filepath) or i.name).rsplit('.', 1)[0]: i
@@ -104,11 +105,12 @@ def fix_image_uri(gltf_data, dstdir):
             continue
         if blender_img.source == 'FILE':
             filepath = blender_img.filepath
+            print(f"Model has texture {filepath}")
             if filepath:
                 if filepath.startswith('//'):
                     filepath = filepath[2:]
-                relpath = os.path.relpath(filepath, dstdir)
-                img['uri'] = relpath
+                img['uri'] = os.path.relpath(filepath, srcdir)
+                print(f"Made texture {filepath} relative to {srcdir}: {img['uri']}")
 
 
 def add_actions_to_nla():
@@ -233,7 +235,7 @@ def export_gltf(settings, src, dst):
 
     export_physics(gltf_data, settings)
     if settings['textures'] == 'ref':
-        fix_image_uri(gltf_data, dstdir)
+        fix_image_uri(gltf_data, os.path.dirname(src))
     if not settings['allow_double_sided_materials']:
         force_single_sided_materials(gltf_data)
     with open(dst, 'w') as gltf_file:
@@ -246,14 +248,12 @@ def convert_files(convertfn, outputext):
     #print(args)
     settings_fname, srcroot, dstdir, blendfiles = args[0], args[1], args[2], args[3:]
 
-    if not srcroot.endswith(os.sep):
-        srcroot += os.sep
-
-    if not dstdir.endswith(os.sep):
-        dstdir += os.sep
+    srcroot = os.path.abspath(srcroot)
+    dstdir = os.path.abspath(dstdir)
 
     with open(settings_fname) as settings_file:
         settings = json.load(settings_file)
+        print(f"Loaded settings: {settings}")
 
     if settings['verbose']:
         print('srcroot:', srcroot)
@@ -270,6 +270,7 @@ def convert_files(convertfn, outputext):
             dst = src.replace(srcroot, dstdir).replace('.blend', '.'+outputext)
 
             bpy.ops.wm.open_mainfile(filepath=src)
+            print(f"Converting {src} to {dst} with {settings}")
             convertfn(settings, src, dst)
     except: #pylint: disable=bare-except
         import traceback

@@ -20,13 +20,19 @@ class BlendLoader:
     @staticmethod
     def load_file(path, options, _record=None):
         settings = BlendLoader.global_settings
+
         if not settings.blender_dir and not blenderutils.blender_exists():
             blender_dir = blenderutils.locate_blenderdir()
-            settings = dataclasses.replace(BlendLoader.global_settings, blender_dir=blender_dir)
+            settings = dataclasses.replace(settings, blender_dir=blender_dir)
+
+        if not settings.assets_dir and settings.textures == "ref":
+            assets_dir = os.path.abspath(path.get_dirname())
+            settings = dataclasses.replace(settings, assets_dir=assets_dir)
 
         loader = p3d.Loader.get_global_ptr()
         with tempfile.TemporaryDirectory() as tmpdir:
             bamfilepath = os.path.join(tmpdir, 'out.bam')
+            print(f"blend2bam converting {path} to {bamfilepath} with {options}")
             convert(
                 settings,
                 path.get_dirname(),

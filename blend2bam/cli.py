@@ -221,6 +221,7 @@ def main():
         invisible_collisions_collection=args.invisible_collisions_collection,
         verbose=args.verbose,
         allow_double_sided_materials=args.allow_double_sided_materials,
+        assets_dir=srcdir,
     )
 
     convert(settings, srcdir, src, dst)

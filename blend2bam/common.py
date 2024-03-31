@@ -15,6 +15,7 @@ class Settings:
     verbose: bool = False
     dump_info: bool = False
     allow_double_sided_materials: bool = False
+    assets_dir: str = ''
 
 
 class ConverterBase:

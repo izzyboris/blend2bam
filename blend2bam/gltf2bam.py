@@ -23,6 +23,7 @@ def run_gltf2bam(src, dst, args):
         dst,
         *argslist,
     ]
+    print(f"Running gltf2bam with {sys.argv}")
     runpy.run_module('gltf.cli', run_name='__main__', alter_sys=True)
     sys.argv = prev_argv
 
@@ -36,6 +37,11 @@ class ConverterGltf2Bam(ConverterBase):
             'skip-axis-conversion': True,
             'no-srgb': self.settings.no_srgb,
         }
+
+        if self.settings.assets_dir:
+            print(f"Using assets dir: {self.settings.assets_dir}")
+            self.cli_args['assets-dir'] = self.settings.assets_dir
+
         if self.settings.textures != 'embed':
             self.cli_args['textures'] = self.settings.textures
 
@@ -60,8 +66,10 @@ class ConverterGltf2Bam(ConverterBase):
         os.makedirs(dstdir, exist_ok=True)
         converted_files = []
 
+        srcroot = os.path.abspath(srcroot)
+
         for gltffile in files:
-            src = gltffile
+            src = os.path.abspath(gltffile)
             dst = src.replace(str(srcroot), str(dstdir))
 
             if self.settings.append_ext:
